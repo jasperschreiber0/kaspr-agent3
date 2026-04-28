@@ -1,15 +1,9 @@
-/**
- * supabase.js — All Supabase operations for kaspr-agent3.
- */
-
 const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
-
-// ─── CONTENT QUEUE ───────────────────────────────────────────────────────────
 
 async function getPendingQueueItems() {
   const { data, error } = await supabase
@@ -20,7 +14,7 @@ async function getPendingQueueItems() {
     .order('received_at', { ascending: true })
     .limit(10);
 
-  if (error) throw new Error(`getPendingQueueItems: ${error.message}`);
+  if (error) throw new Error('getPendingQueueItems: ' + error.message);
   return data ?? [];
 }
 
@@ -34,7 +28,7 @@ async function getReplySignals(clientId) {
     .order('received_at', { ascending: true })
     .limit(5);
 
-  if (error) throw new Error(`getReplySignals: ${error.message}`);
+  if (error) throw new Error('getReplySignals: ' + error.message);
   return data ?? [];
 }
 
@@ -47,10 +41,8 @@ async function updateQueueStatus(id, status, postId = null) {
     .update(update)
     .eq('id', id);
 
-  if (error) throw new Error(`updateQueueStatus: ${error.message}`);
+  if (error) throw new Error('updateQueueStatus: ' + error.message);
 }
-
-// ─── CLIENTS ─────────────────────────────────────────────────────────────────
 
 async function getClient(clientId) {
   const { data, error } = await supabase
@@ -60,11 +52,9 @@ async function getClient(clientId) {
     .eq('active', true)
     .single();
 
-  if (error) throw new Error(`getClient: ${error.message}`);
+  if (error) throw new Error('getClient: ' + error.message);
   return data;
 }
-
-// ─── TREND BRIEFS ────────────────────────────────────────────────────────────
 
 async function getLatestTrendBrief(clientId) {
   const { data, error } = await supabase
@@ -76,7 +66,7 @@ async function getLatestTrendBrief(clientId) {
     .single();
 
   if (error && error.code !== 'PGRST116') {
-    throw new Error(`getLatestTrendBrief: ${error.message}`);
+    throw new Error('getLatestTrendBrief: ' + error.message);
   }
   return data ?? null;
 }
@@ -87,10 +77,8 @@ async function markBriefUsed(briefId) {
     .update({ used_at: new Date().toISOString() })
     .eq('id', briefId);
 
-  if (error) console.warn(`[supabase] markBriefUsed failed: ${error.message}`);
+  if (error) console.warn('[supabase] markBriefUsed failed: ' + error.message);
 }
-
-// ─── SCHEDULED POSTS ─────────────────────────────────────────────────────────
 
 async function createScheduledPost({
   clientId, queueId, instagramCaption, tiktokCaption,
@@ -112,7 +100,7 @@ async function createScheduledPost({
     .select()
     .single();
 
-  if (error) throw new Error(`createScheduledPost: ${error.message}`);
+  if (error) throw new Error('createScheduledPost: ' + error.message);
   return data;
 }
 
@@ -122,7 +110,7 @@ async function updateScheduledPost(id, updates) {
     .update(updates)
     .eq('id', id);
 
-  if (error) throw new Error(`updateScheduledPost: ${error.message}`);
+  if (error) throw new Error('updateScheduledPost: ' + error.message);
 }
 
 async function getScheduledPostsForClient(clientId) {
@@ -134,7 +122,7 @@ async function getScheduledPostsForClient(clientId) {
     .gte('scheduled_at', new Date().toISOString())
     .order('scheduled_at', { ascending: true });
 
-  if (error) throw new Error(`getScheduledPostsForClient: ${error.message}`);
+  if (error) throw new Error('getScheduledPostsForClient: ' + error.message);
   return data ?? [];
 }
 
@@ -148,18 +136,16 @@ async function getPendingScheduledPosts() {
     .order('scheduled_at', { ascending: true })
     .limit(5);
 
-  if (error) throw new Error(`getPendingScheduledPosts: ${error.message}`);
+  if (error) throw new Error('getPendingScheduledPosts: ' + error.message);
   return data ?? [];
 }
 
-// ─── STORAGE ─────────────────────────────────────────────────────────────────
-
 async function getSignedMediaUrl(storagePath, expiresIn = 3600) {
   const { data, error } = await supabase.storage
-    .from('kaspr-media')
+    .from('processed-content')
     .createSignedUrl(storagePath, expiresIn);
 
-  if (error) throw new Error(`getSignedMediaUrl: ${error.message}`);
+  if (error) throw new Error('getSignedMediaUrl: ' + error.message);
   return data.signedUrl;
 }
 
