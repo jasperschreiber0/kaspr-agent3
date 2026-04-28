@@ -173,7 +173,7 @@ async function publishPost(post) {
       : null;
 
     if (mediaUrl && client.instagram_access_token && client.instagram_account_id) {
-      if (queueItem.content_type === 'video') {
+     if (queueItem.content_type === 'video' || queueItem.content_type === 'reel') {
         const containerId = await scheduleReelPost({
           accessToken: client.instagram_access_token,
           igUserId: client.instagram_account_id,
@@ -214,7 +214,7 @@ async function publishPost(post) {
       : null;
 
     if (mediaUrl && client.tiktok_access_token && client.tiktok_account_id) {
-      if (queueItem.content_type === 'video') {
+      if (queueItem.content_type === 'video' || queueItem.content_type === 'reel') {
         ttPostId = await postVideo({
           accessToken: client.tiktok_access_token,
           videoUrl: mediaUrl,
