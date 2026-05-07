@@ -264,7 +264,7 @@ async function handlePreviewRequest(clientId) {
 
   // Get the full post record
   const { createClient } = require('@supabase/supabase-js');
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
   const { data: post } = await supabase
     .from('scheduled_posts')
     .select('*')
@@ -298,7 +298,7 @@ function buildCaption(caption, hashtags, inline = false) {
 
 async function getQueueItem(queueId) {
   const { createClient } = require('@supabase/supabase-js');
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
   const { data } = await supabase
     .from('content_queue')
     .select('*')
