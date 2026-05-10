@@ -151,7 +151,7 @@ async function waitForTiktokPublish(accessToken, publishId, maxAttempts = 15) {
 
     const status = resp.data?.data?.status;
     console.log(`[tiktok] Publish status (attempt ${i + 1}): ${status}`);
-    if (status === 'PUBLISH_COMPLETE') return;
+    if (status === 'PUBLISH_COMPLETE' || status === 'SEND_TO_USER_INBOX') return;
     if (status === 'FAILED') {
       const reason = resp.data?.data?.fail_reason || 'unknown';
       throw new Error(`TikTok publish failed: ${reason}`);
