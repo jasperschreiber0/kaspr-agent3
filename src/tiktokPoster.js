@@ -22,7 +22,7 @@ async function postVideo({ accessToken, videoUrl, caption }) {
   let initResp;
   try {
     initResp = await axios.post(
-      `${TIKTOK_API_BASE}/post/publish/video/init/`,
+     `${TIKTOK_API_BASE}/post/publish/inbox/video/init/`,
       {
         post_info: {
           title: caption.slice(0, 150),
