@@ -60,6 +60,11 @@ app.get('/test-tiktok', async (req, res) => {
   }
 });
 
+const PORT = process.env.PORT || 3003;
+app.listen(PORT, () => {
+  console.log(`[kaspr-agent3] Health check on port ${PORT}`);
+});
+
 // ─── MAIN DAEMON LOOP ────────────────────────────────────────────────────────
 
 let isRunning = false;
