@@ -46,9 +46,18 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', agent: 'kaspr-publisher', ts: new Date().toISOString() });
 });
 
-const PORT = process.env.PORT || 3003;
-app.listen(PORT, () => {
-  console.log(`[kaspr-agent3] Health check on port ${PORT}`);
+app.get('/test-tiktok', async (req, res) => {
+  const { postVideo } = require('./src/tiktokPoster');
+  try {
+    const id = await postVideo({
+      accessToken: process.env.TIKTOK_ACCESS_TOKEN,
+      videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+      caption: 'Kaspr sandbox test post',
+    });
+    res.json({ success: true, publish_id: id });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
 });
 
 // ─── MAIN DAEMON LOOP ────────────────────────────────────────────────────────
