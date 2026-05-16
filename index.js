@@ -51,7 +51,7 @@ app.get('/test-tiktok', async (req, res) => {
   try {
     const id = await postVideo({
       accessToken: process.env.TIKTOK_ACCESS_TOKEN,
-      videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+      videoUrl: 'https://mhsygkmdfrpkmhohieql.supabase.co/storage/v1/object/public/test-media/6988786-hd_1080_1920_30fps.mp4',
       caption: 'Kaspr sandbox test post',
     });
     res.json({ success: true, publish_id: id });
