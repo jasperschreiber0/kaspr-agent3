@@ -16,7 +16,7 @@ const TIKTOK_CLIENT_KEY = process.env.TIKTOK_CLIENT_KEY;
 const TIKTOK_CLIENT_SECRET = process.env.TIKTOK_CLIENT_SECRET;
  
 // Must match exactly what's registered in the TikTok developer portal
-const REDIRECT_URI = 'https://kaspr-agent3.up.railway.app/auth/tiktok/callback';
+const REDIRECT_URI = 'https://kaspr-agent3-production.up.railway.app/auth/tiktok/callback';
  
 // Scopes — only what you actually use
 const SCOPES = 'video.publish,video.upload';
