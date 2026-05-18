@@ -59,7 +59,8 @@ app.get('/test-tiktok', async (req, res) => {
     res.json({ success: false, error: err.message });
   }
 });
-
+const tiktokAuth = require('./src/tiktokAuth');
+app.use('/', tiktokAuth);
 const PORT = process.env.PORT || 3003;
 app.listen(PORT, () => {
   console.log(`[kaspr-agent3] Health check on port ${PORT}`);
