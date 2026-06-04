@@ -1,6 +1,6 @@
 // tiktokAuth.js — TikTok OAuth flow for kaspr-agent3
 // Routes: GET /auth/tiktok?client_id=UUID
-//         GET /auth/tiktok/callback
+//         GET /auth/callback
  
 const express = require('express');
 const router = express.Router();
@@ -16,7 +16,7 @@ const TIKTOK_CLIENT_KEY = process.env.TIKTOK_CLIENT_KEY;
 const TIKTOK_CLIENT_SECRET = process.env.TIKTOK_CLIENT_SECRET;
  
 // Must match exactly what's registered in the TikTok developer portal
-const REDIRECT_URI = 'https://kaspr-agent3-production.up.railway.app/auth/tiktok/callback';
+const REDIRECT_URI = 'https://kaspr-agent3-production.up.railway.app/auth/callback';
  
 // Scopes — only what you actually use
 const SCOPES = 'video.publish,video.upload';
@@ -54,7 +54,7 @@ router.get('/auth/tiktok', (req, res) => {
 });
  
 // ─── Step 2: OAuth Callback ───────────────────────────────────────────────────
-router.get('/auth/tiktok/callback', async (req, res) => {
+router.get('/auth/callback', async (req, res) => {
   const { code, state, error, error_description } = req.query;
  
   // User denied or TikTok returned an error
