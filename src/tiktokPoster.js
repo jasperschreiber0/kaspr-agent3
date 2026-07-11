@@ -3,6 +3,13 @@
  *
  * Supports: Photo posts, Video posts
  * Uses FILE_UPLOAD mode (not PULL_FROM_URL) to avoid domain verification requirement.
+ *
+ * IMPORTANT: TikTok's Content Posting API server-side forces
+ * privacy_level to SELF_ONLY for any app that hasn't completed TikTok's
+ * app review/audit — the value requested below is a request, not a
+ * guarantee. If posts are still landing as private after this fix,
+ * check this app's audit status in the TikTok developer portal before
+ * assuming it's a code bug.
  */
 const axios = require('axios');
 const TIKTOK_API_BASE = 'https://open.tiktokapis.com/v2';
@@ -26,7 +33,11 @@ async function postVideo({ accessToken, videoUrl, caption }) {
       {
         post_info: {
           title: caption.slice(0, 150),
-          privacy_level: 'SELF_ONLY',
+          // Was 'SELF_ONLY' — inconsistent with postPhoto()'s
+          // 'PUBLIC_TO_EVERYONE' for what's meant to be the same
+          // "keeps your feed posting" pipeline. See file-level note
+          // above re: TikTok app audit requirements.
+          privacy_level: 'PUBLIC_TO_EVERYONE',
           disable_duet: false,
           disable_comment: false,
           disable_stitch: false,
