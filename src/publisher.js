@@ -9,7 +9,7 @@
  */
 
 const db = require('./supabase');
-const { generateCaptions } = require('./captionWriter');
+const { generateCaptions, buildInstagramPost, buildTiktokPost } = require('./captionWriter');
 const { getNextPostTime, formatScheduledTime } = require('./scheduler');
 const { scheduleImagePost, scheduleReelPost, publishContainer } = require('./instagramPoster');
 const { postPhoto, postVideo } = require('./tiktokPoster');
@@ -157,11 +157,11 @@ async function publishDue() {
 
 async function publishPost(post) {
   const client = await db.getClient(post.client_id);
-  const queueItem = await getQueueItem(post.queue_id);
+  const queueItem = await db.getContentQueueItem(post.queue_id);
 
   // Build full caption strings
-  const igCaption = buildCaption(post.instagram_caption, post.instagram_hashtags);
-  const ttCaption = buildCaption(post.tiktok_caption, post.tiktok_hashtags, true);
+  const igCaption = buildInstagramPost(post.instagram_caption, post.instagram_hashtags);
+  const ttCaption = buildTiktokPost(post.tiktok_caption, post.tiktok_hashtags);
 
   let igPostId = null;
   let ttPostId = null;
@@ -262,18 +262,7 @@ async function handlePreviewRequest(clientId) {
     return;
   }
 
-  // Get the full post record
-  const { createClient } = require('@supabase/supabase-js');
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-  const { data: post } = await supabase
-    .from('scheduled_posts')
-    .select('*')
-    .eq('client_id', clientId)
-    .eq('status', 'scheduled')
-    .order('scheduled_at', { ascending: true })
-    .limit(1)
-    .single();
-
+  const post = await db.getNextScheduledPost(clientId);
   if (!post) return;
 
   await notifier.notifyClient(
@@ -287,24 +276,6 @@ async function handlePreviewRequest(clientId) {
   );
 
   await openclaw.emit('preview.sent', { client_id: clientId, post_id: post.id });
-}
-
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-
-function buildCaption(caption, hashtags, inline = false) {
-  const tags = (hashtags || []).map(t => `#${t.replace(/^#/, '')}`).join(' ');
-  return inline ? `${caption} ${tags}` : `${caption}\n\n${tags}`;
-}
-
-async function getQueueItem(queueId) {
-  const { createClient } = require('@supabase/supabase-js');
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-  const { data } = await supabase
-    .from('content_queue')
-    .select('*')
-    .eq('id', queueId)
-    .single();
-  return data;
 }
 
 module.exports = { processQueue, publishDue, handlePreviewRequest };
