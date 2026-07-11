@@ -40,25 +40,13 @@ if (missing.length > 0) {
 // ─── HEALTH SERVER ───────────────────────────────────────────────────────────
 
 const app = express();
+app.set('trust proxy', true);
 app.use(express.json());
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', agent: 'kaspr-publisher', ts: new Date().toISOString() });
 });
 
-app.get('/test-tiktok', async (req, res) => {
-  const { postVideo } = require('./src/tiktokPoster');
-  try {
-    const id = await postVideo({
-      accessToken: process.env.TIKTOK_ACCESS_TOKEN,
-      videoUrl: 'https://mhsygkmdfrpkmhohieql.supabase.co/storage/v1/object/public/test-media/6988786-hd_1080_1920_30fps.mp4',
-      caption: 'Kaspr sandbox test post',
-    });
-    res.json({ success: true, publish_id: id });
-  } catch (err) {
-    res.json({ success: false, error: err.message });
-  }
-});
 const tiktokAuth = require('./src/tiktokAuth');
 app.use('/', tiktokAuth);
 const PORT = process.env.PORT || 3003;
