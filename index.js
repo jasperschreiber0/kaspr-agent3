@@ -8,6 +8,7 @@
  *    - publishDue()    → fire posts that have hit their scheduled_at time
  *    - poll OpenClaw events (content.received, trend.brief.ready)
  *    - process reply signals (PREVIEW / GO / EDIT)
+ *    - token health checks (throttled to hourly — see tokenRefresh.js)
  *
  *  HEALTH endpoint:
  *    GET /health → 200 OK
@@ -18,6 +19,7 @@ require('dotenv').config();
 const express = require('express');
 const { processQueue, publishDue, handlePreviewRequest } = require('./src/publisher');
 const openclaw = require('./src/openclaw');
+const tokenRefresh = require('./src/tokenRefresh');
 const db = require('./src/supabase');
 
 // ─── ENV VALIDATION ──────────────────────────────────────────────────────────
@@ -25,10 +27,12 @@ const db = require('./src/supabase');
 const REQUIRED = [
   'ANTHROPIC_API_KEY',
   'SUPABASE_URL',
-'SUPABASE_SERVICE_ROLE_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
   'TWILIO_ACCOUNT_SID',
   'TWILIO_AUTH_TOKEN',
   'TWILIO_WHATSAPP_NUMBER',
+  'TIKTOK_CLIENT_KEY',
+  'TIKTOK_CLIENT_SECRET',
 ];
 
 const missing = REQUIRED.filter(k => !process.env[k]);
@@ -79,6 +83,10 @@ async function tick() {
 
     // 4. Publish any posts that are now due
     await publishDue();
+
+    // 5. Refresh TikTok tokens close to expiry; warn on Instagram tokens
+    //    close to expiry (throttled internally to run at most hourly)
+    await tokenRefresh.runTokenHealthChecks();
 
     await openclaw.logStatus('idle', `Last tick: ${new Date().toISOString()}`);
 
