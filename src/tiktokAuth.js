@@ -97,13 +97,19 @@ router.get('/auth/callback', async (req, res) => {
     return res.status(500).send(`Token exchange failed: ${err.message}`);
   }
  
-  const { access_token, open_id } = tokenData;
+  const { access_token, refresh_token, expires_in, open_id } = tokenData;
+  // TikTok access tokens are short-lived (~24h) — this expiry is what
+  // tokenRefresh.js uses to know when to proactively refresh, and
+  // refresh_token is what makes that refresh possible at all.
+  const tokenExpiresAt = new Date(Date.now() + (expires_in || 86400) * 1000).toISOString();
  
   // Store in Supabase against the client row
   const { error: dbError } = await supabase
     .from('clients')
     .update({
       tiktok_access_token: access_token,
+      tiktok_refresh_token: refresh_token,
+      tiktok_token_expires_at: tokenExpiresAt,
       tiktok_account_id: open_id,
     })
     .eq('id', client_id);
@@ -113,7 +119,7 @@ router.get('/auth/callback', async (req, res) => {
     return res.status(500).send(`Failed to save TikTok credentials: ${dbError.message}`);
   }
  
-  console.log(`[TikTok OAuth] Connected TikTok for client ${client_id} (open_id: ${open_id})`);
+  console.log(`[TikTok OAuth] Connected TikTok for client ${client_id} (open_id: ${open_id}), expires ${tokenExpiresAt}`);
  
   // Success — show a simple confirmation page
   res.send(`
