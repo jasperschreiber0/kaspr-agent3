@@ -32,6 +32,17 @@ async function getReplySignals(clientId) {
   return data ?? [];
 }
 
+async function getContentQueueItem(id) {
+  const { data, error } = await supabase
+    .from('content_queue')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) throw new Error('getContentQueueItem: ' + error.message);
+  return data;
+}
+
 async function updateQueueStatus(id, status, postId = null) {
   const update = { status, processed_at: new Date().toISOString() };
   if (postId) update.post_id = postId;
@@ -126,6 +137,20 @@ async function getScheduledPostsForClient(clientId) {
   return data ?? [];
 }
 
+async function getNextScheduledPost(clientId) {
+  const { data, error } = await supabase
+    .from('scheduled_posts')
+    .select('*')
+    .eq('client_id', clientId)
+    .eq('status', 'scheduled')
+    .order('scheduled_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw new Error('getNextScheduledPost: ' + error.message);
+  return data;
+}
+
 async function getPendingScheduledPosts() {
   const now = new Date().toISOString();
   const { data, error } = await supabase
@@ -152,6 +177,7 @@ async function getSignedMediaUrl(storagePath, expiresIn = 3600) {
 module.exports = {
   getPendingQueueItems,
   getReplySignals,
+  getContentQueueItem,
   updateQueueStatus,
   getClient,
   getLatestTrendBrief,
@@ -159,6 +185,7 @@ module.exports = {
   createScheduledPost,
   updateScheduledPost,
   getScheduledPostsForClient,
+  getNextScheduledPost,
   getPendingScheduledPosts,
   getSignedMediaUrl,
 };
