@@ -1,12 +1,24 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// Lazy singleton: constructing the client at import time makes this
+// module (and anything that requires it, like scheduler.js) throw the
+// moment it's loaded if SUPABASE_URL isn't set yet — including in tests
+// that never touch the network. Deferring to first use means importing
+// this file is always safe; the client is still built once and reused
+// after that.
+let supabase;
+function getSupabase() {
+  if (!supabase) {
+    supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+  }
+  return supabase;
+}
 
 async function getPendingQueueItems() {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('content_queue')
     .select('*')
     .eq('status', 'pending')
@@ -19,7 +31,7 @@ async function getPendingQueueItems() {
 }
 
 async function getReplySignals(clientId) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('content_queue')
     .select('*')
     .eq('client_id', clientId)
@@ -33,7 +45,7 @@ async function getReplySignals(clientId) {
 }
 
 async function getContentQueueItem(id) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('content_queue')
     .select('*')
     .eq('id', id)
@@ -47,7 +59,7 @@ async function updateQueueStatus(id, status, postId = null) {
   const update = { status, processed_at: new Date().toISOString() };
   if (postId) update.post_id = postId;
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('content_queue')
     .update(update)
     .eq('id', id);
@@ -56,7 +68,7 @@ async function updateQueueStatus(id, status, postId = null) {
 }
 
 async function getClient(clientId) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('clients')
     .select('*')
     .eq('id', clientId)
@@ -68,7 +80,7 @@ async function getClient(clientId) {
 }
 
 async function getLatestTrendBrief(clientId) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('trend_briefs')
     .select('*')
     .eq('client_id', clientId)
@@ -83,7 +95,7 @@ async function getLatestTrendBrief(clientId) {
 }
 
 async function markBriefUsed(briefId) {
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('trend_briefs')
     .update({ used_at: new Date().toISOString() })
     .eq('id', briefId);
@@ -95,7 +107,7 @@ async function createScheduledPost({
   clientId, queueId, instagramCaption, tiktokCaption,
   instagramHashtags, tiktokHashtags, scheduledAt, trendBriefId,
 }) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('scheduled_posts')
     .insert({
       client_id: clientId,
@@ -116,7 +128,7 @@ async function createScheduledPost({
 }
 
 async function updateScheduledPost(id, updates) {
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('scheduled_posts')
     .update(updates)
     .eq('id', id);
@@ -125,7 +137,7 @@ async function updateScheduledPost(id, updates) {
 }
 
 async function getScheduledPostsForClient(clientId) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('scheduled_posts')
     .select('scheduled_at')
     .eq('client_id', clientId)
@@ -138,7 +150,7 @@ async function getScheduledPostsForClient(clientId) {
 }
 
 async function getNextScheduledPost(clientId) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('scheduled_posts')
     .select('*')
     .eq('client_id', clientId)
@@ -153,7 +165,7 @@ async function getNextScheduledPost(clientId) {
 
 async function getPendingScheduledPosts() {
   const now = new Date().toISOString();
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('scheduled_posts')
     .select('*')
     .eq('status', 'scheduled')
@@ -166,7 +178,7 @@ async function getPendingScheduledPosts() {
 }
 
 async function getSignedMediaUrl(storagePath, expiresIn = 3600) {
-  const { data, error } = await supabase.storage
+  const { data, error } = await getSupabase().storage
     .from('processed-content')
     .createSignedUrl(storagePath, expiresIn);
 
